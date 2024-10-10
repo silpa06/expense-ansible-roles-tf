@@ -1,0 +1,50 @@
+ 
+  - name: install mysql dependencies
+    ansible.builtin.pip:
+     name: PyMySQL
+     state: present
+     executable: pip-3.9
+
+  - name: mysql server installation
+    ansible.builtin.package:
+     name: mysql-server
+     state: present
+
+  - name: start mysql server
+    ansible.builtin.service:
+     name: mysqld
+     state: started
+     enabled: yes
+
+  - name: set mysql root password
+    community.mysql.mysql_info:
+     login_user: root
+     login_password: "{{ Mysql_root_password }}"
+     login_host: "{{ Mysql_login_host }}"
+    ignore_errors: true 
+    register: mysql_info 
+
+  - name: print mysql mysql_info
+    ansible.builtin.debug:
+     msg: "{{ mysql_info }}"
+
+  - name: setup MySQL root password
+    ansible.builtin.command: "mysql_secure_installation --set-root-pass {{ Mysql_root_password }}"
+    when: mysql_info.failed is true
+
+  # - name: Set MySQL root password 
+  #   mysql_user:
+  #     name: root
+  #     host: "{{ Mysql_login_host }}"
+  #     password: "{{ Mysql_root_password }}"
+  #     check_implicit_admin: yes
+  #   when: Mysql_root_password is defined
+
+  # - name: Ensure MySQL root password is updated
+  #   mysql_user:
+  #     name: root
+  #     host: "{{ Mysql_login_host }}"
+  #     password: "{{ Mysql_root_password }}"
+  #     check_implicit_admin: yes
+  #     state: present
+  #   when: Mysql_root_password is defined    

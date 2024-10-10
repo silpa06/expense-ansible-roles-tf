@@ -1,0 +1,65 @@
+- name: create ec2-instances
+  hosts: local
+  connection: local
+  vars:
+   subnet_id: "subnet-0b3e5e27d1a5902bd" 
+   sg_group: "sg-011b2b086e67184b0"
+   ami_id: "ami-09c813fb71547fc4f"
+   instances:
+   - mysql
+   - backend
+   - frontend
+   zone: "devteck.xyz"
+
+  tasks:
+  - name: Install boto3 and botocore with pip3 module
+    pip:
+      name: 
+      - boto3
+      - botocore
+      executable: pip-3.9
+
+  - name: create ec2-instance
+    amazon.aws.ec2_instance:
+     name: "{{ item }}"
+     vpc_subnet_id: "{{ subnet_id }}"
+     instance_type: "t2.micro"
+     security_group: "{{ sg_group }}"
+     image_id: "{{ ami_id }}"
+    loop: "{{ instances }}"
+    register: ec2_instances
+
+  - name: print the output
+    ansible.builtin.debug:
+     msg: "{{ ec2_instances }}"
+
+  - name: create r53 private records
+    amazon.aws.route53:
+     state: present
+     zone: "{{ zone  }}"
+     record: "{{ item.item }}.{{ zone }}"
+     type: A
+     ttl: 1
+     value: "{{ item.instances[0].private_ip_address }}"
+     wait: true
+     overwrite: true
+    loop: "{{ ec2_instances.results }}"
+
+  - name: create r53 public record
+    amazon.aws.route53:
+     state: present
+     zone: "{{ zone  }}"
+     record: "{{ zone }}"
+     type: A
+     ttl: 1
+     value: "{{ item.instances[0].public_ip_address }}"
+     wait: true
+     overwrite: true
+    loop: "{{ ec2_instances.results }}"
+    when: item.item == "frontend"
+
+
+
+  
+    
+    

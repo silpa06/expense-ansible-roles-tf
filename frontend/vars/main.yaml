@@ -1,0 +1,3 @@
+BACKEND_HOST: backend.devteck.xyz
+app_location: /usr/share/nginx/html
+component: frontend

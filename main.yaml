@@ -1,7 +1,7 @@
-- name: "{{ Component }} configuration"
+- name: "{{ component }} configuration"
   hosts: all
   become: yes
   vars_files:
   - "variables.{{ environment }}.yaml"
   roles:
-  - "{{ Component }}"
+  - "{{ component }}"
